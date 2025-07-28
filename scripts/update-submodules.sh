@@ -75,12 +75,19 @@ update_submodule() {
     
     log INFO "Updating submodule: ${submodule_path}"
     
+    # Check if submodule directory exists
+    if [ ! -d "${submodule_path}" ]; then
+        log WARNING "Submodule directory does not exist: ${submodule_path}"
+        log INFO "Attempting to initialize submodule: ${submodule_path}"
+    fi
+    
     # Try to update the submodule
     if git submodule update --init --recursive "${submodule_path}" 2>&1 | tee -a "${LOG_FILE}"; then
         log SUCCESS "Successfully updated: ${submodule_path}"
         return 0
     else
-        log ERROR "Failed to update: ${submodule_path}"
+        local exit_code=$?
+        log ERROR "Failed to update: ${submodule_path} (exit code: ${exit_code})"
         return 1
     fi
 }
@@ -151,10 +158,10 @@ main() {
         log ERROR "Failed to update: ${failed_count}"
         log ERROR "Failed submodules:${failed_submodules}"
         
-        # Ask if user wants to try force update
-        echo -e "\n${YELLOW}Would you like to try a force update on failed submodules? (y/N)${NC}"
-        read -r response
-        if [[ "${response}" =~ ^[Yy]$ ]]; then
+        # Check if running in CI/CD environment
+        if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ] || [ -n "${JENKINS_HOME:-}" ] || [ -n "${GITLAB_CI:-}" ]; then
+            log WARNING "Running in CI/CD environment, skipping interactive prompt"
+            # In CI/CD, automatically attempt force update
             log INFO "Attempting force update on failed submodules..."
             for submodule in ${submodules}; do
                 if [[ "${failed_submodules}" == *"${submodule}"* ]]; then
@@ -166,6 +173,23 @@ main() {
                     fi
                 fi
             done
+        else
+            # Ask if user wants to try force update (only in interactive mode)
+            echo -e "\n${YELLOW}Would you like to try a force update on failed submodules? (y/N)${NC}"
+            read -r response
+            if [[ "${response}" =~ ^[Yy]$ ]]; then
+                log INFO "Attempting force update on failed submodules..."
+                for submodule in ${submodules}; do
+                    if [[ "${failed_submodules}" == *"${submodule}"* ]]; then
+                        log INFO "Force updating: ${submodule}"
+                        if git submodule update --init --recursive --force "${submodule}" 2>&1 | tee -a "${LOG_FILE}"; then
+                            log SUCCESS "Force update successful: ${submodule}"
+                        else
+                            log ERROR "Force update failed: ${submodule}"
+                        fi
+                    fi
+                done
+            fi
         fi
     fi
     
