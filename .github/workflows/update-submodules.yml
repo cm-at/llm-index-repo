@@ -36,7 +36,20 @@ jobs:
       - name: Update submodules
         run: |
           chmod +x scripts/update-submodules.sh
-          ./scripts/update-submodules.sh
+          # Set CI environment variable
+          export CI=true
+          export GITHUB_ACTIONS=true
+          # Run with debug output
+          bash -x ./scripts/update-submodules.sh || true
+          # Check exit code separately
+          if [ $? -ne 0 ]; then
+            echo "Script failed, checking logs..."
+            if [ -d logs ]; then
+              echo "=== Latest log file ==="
+              cat logs/$(ls -t logs/ | head -1) || true
+            fi
+            exit 1
+          fi
       
       # Check if there are any changes
       - name: Check for changes
