@@ -1,0 +1,77 @@
+name: Update Submodules
+
+on:
+  # Run daily at midnight UTC
+  schedule:
+    - cron: '0 0 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+# Set permissions for GITHUB_TOKEN
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout repository with submodules
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      # Configure git user for commits
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      
+      # Run the update script
+      - name: Update submodules
+        run: |
+          chmod +x scripts/update-submodules.sh
+          ./scripts/update-submodules.sh
+      
+      # Check if there are any changes
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+      
+      # Commit and push changes if any
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git add .
+          git commit -m "chore: update submodules [automated]"
+          git push origin HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Optional: Create a pull request instead of direct push
+      # Uncomment the following step and comment out the direct push above
+      # to create PRs instead of pushing directly to the branch
+      
+      # - name: Create Pull Request
+      #   if: steps.check_changes.outputs.changes == 'true'
+      #   uses: peter-evans/create-pull-request@v5
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     commit-message: 'chore: update submodules [automated]'
+      #     title: 'Automated Submodule Update'
+      #     body: |
+      #       This PR updates the submodules to their latest versions.
+      #       
+      #       Generated automatically by the update-submodules workflow.
+      #     branch: automated-submodule-update
+      #     delete-branch: true

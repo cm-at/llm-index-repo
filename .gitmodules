@@ -1,0 +1,21 @@
+[submodule "repositories/arckit"]
+	path = repositories/arckit
+	url = https://github.com/After-Thought/arckit
+[submodule "repositories/ARC-Results"]
+	path = repositories/ARC-Results
+	url = https://github.com/After-Thought/ARC-Results
+[submodule "repositories/arc_metalearners"]
+	path = repositories/arc_metalearners
+	url = https://github.com/After-Thought/arc_metalearners
+[submodule "repositories/verl"]
+	path = repositories/verl
+	url = https://github.com/After-Thought/verl
+[submodule "repositories/Oldowan-DSL"]
+	path = repositories/Oldowan-DSL
+	url = https://github.com/After-Thought/Oldowan-DSL
+[submodule "repositories/llm-finetune"]
+	path = repositories/llm-finetune
+	url = https://github.com/After-Thought/llm-finetune
+[submodule "repositories/Obs-Parser"]
+	path = repositories/Obs-Parser
+	url = https://github.com/After-Thought/Obs-Parser
