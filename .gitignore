@@ -1,0 +1,26 @@
+# Ignore all files in the node_modules and build directories
+node_modules/
+build/
+
+# Ignore editor directories and files
+*.swp
+.idea/
+.vscode/
+
+# Ignore MacOS system files
+.DS_Store
+
+# Ignore log files
+*.log
+
+# Ignore other unwanted files
+*.tmp
+*.bak
+
+# Ignore Python cache files
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
